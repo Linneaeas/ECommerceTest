@@ -1,20 +1,5 @@
 namespace ECommerceTest;
-
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
-using System.Text.Encodings.Web;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Identity;
-using ECommerceBE.Database;
-using ECommerceBE.Models;
-
 using Xunit;
 using System.Net.Http.Json;
 
@@ -54,23 +39,27 @@ public class ExampleIntegrationTests : IClassFixture<ApplicationFactory<ECommerc
     }
 
     [Fact]
-    public async void GetAll_WhenEmpty_ThenReturnEmpty()
+    public async void DeleteProduct_WhenExisting_ThenSuccess()
     {
-        // given
+
         var client = factory.CreateClient();
+        var productName = "Skirt";
+        var productDescription = "enbeskrivning";
+        var productInventory = 3;
+        var productPrice = 150;
+        var productPicture = "enbild";
 
-        // Radera databasen och skapa den igen specifikt för detta test.
-        var scope = factory.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ECommerceBE.Database.MyDbContext>();
-        context.Database.EnsureDeleted();
-        context.Database.EnsureCreated();
+
+        var addProductRequest = await client.PostAsync($"/Product/AddProduct?name={productName}&description={productDescription}&inventory={productInventory}&price={productPrice}&picture={productPicture}", null);
+        var addedProduct = await addProductRequest.Content.ReadFromJsonAsync<ECommerceBE.Models.ProductDto>();
 
 
-        // when
-        var response = await client.GetFromJsonAsync<List<ECommerceBE.Models.ProductDto>>("/product");
+        var deleteRequest = await client.DeleteAsync($"/Product/DeleteProduct/{addedProduct.Id}");
 
-        // then
-        Assert.NotNull(response);
-        Assert.Empty(response);
+
+        deleteRequest.EnsureSuccessStatusCode();
+        var deleteResponse = await deleteRequest.Content.ReadAsStringAsync();
+        Assert.Equal("Product deleted successfully", deleteResponse);
     }
+
 }
