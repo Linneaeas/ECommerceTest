@@ -1,5 +1,4 @@
 namespace ECommerceTest;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using System.Net.Http.Json;
 
@@ -15,7 +14,6 @@ public class ExampleIntegrationTests : IClassFixture<ApplicationFactory<ECommerc
     [Fact]
     public async void AddProduct_WhenCreate_ThenSuccess()
     {
-        // given
         var client = factory.CreateClient();
         var productName = "Skirt";
         var productDescription = "enbeskrivning";
@@ -23,12 +21,10 @@ public class ExampleIntegrationTests : IClassFixture<ApplicationFactory<ECommerc
         var productPrice = 150;
         var productPicture = "enbild";
 
-        // when
         var request = await client.PostAsync($"/Product/AddProduct?name={productName}&description={productDescription}&inventory={productInventory}&price={productPrice}&picture={productPicture}", null);
         ECommerceBE.Models.ProductDto? response =
             await request.Content.ReadFromJsonAsync<ECommerceBE.Models.ProductDto>();
 
-        // then
         request.EnsureSuccessStatusCode();
         Assert.NotNull(response);
         Assert.Equal(productName, response.Name);
@@ -38,10 +34,10 @@ public class ExampleIntegrationTests : IClassFixture<ApplicationFactory<ECommerc
         Assert.Equal(productPicture, response.Picture);
     }
 
+
     [Fact]
     public async void DeleteProduct_WhenExisting_ThenSuccess()
     {
-
         var client = factory.CreateClient();
         var productName = "Skirt";
         var productDescription = "enbeskrivning";
@@ -49,17 +45,13 @@ public class ExampleIntegrationTests : IClassFixture<ApplicationFactory<ECommerc
         var productPrice = 150;
         var productPicture = "enbild";
 
-
         var addProductRequest = await client.PostAsync($"/Product/AddProduct?name={productName}&description={productDescription}&inventory={productInventory}&price={productPrice}&picture={productPicture}", null);
         var addedProduct = await addProductRequest.Content.ReadFromJsonAsync<ECommerceBE.Models.ProductDto>();
 
-
         var deleteRequest = await client.DeleteAsync($"/Product/DeleteProduct/{addedProduct.Id}");
-
 
         deleteRequest.EnsureSuccessStatusCode();
         var deleteResponse = await deleteRequest.Content.ReadAsStringAsync();
         Assert.Equal("Product deleted successfully", deleteResponse);
     }
-
 }
